@@ -44,6 +44,18 @@ func fileToHtml(fileName string){
 
 	f.Close()
 }
+func dirToHtml(directory string){
+	files,err := ioutil.ReadDir(directory)
+	checkErr(err)
+
+	for _,file := range files{
+		if file.Name()[len(file.Name())-4:]==".txt"{
+			fileToHtml(file.Name())
+		}
+
+	}
+
+}
 
 
 func checkErr(err error){
