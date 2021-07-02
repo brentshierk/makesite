@@ -2,14 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	//"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
+	"context"
 	//"path/filepath"
+	
+	
 	"strings"
-	"spotify"
-	"http"
+
+	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 
@@ -26,8 +31,8 @@ func main() {
 	if directory != ""{
 		dirToHtml(directory)
 	}else if fileName != ""{
-		fileToHtml(fileName)
-
+		makePlaylist(fileName)
+		fmt.Println("this function ran")
 	}
 
 	
@@ -59,33 +64,64 @@ func dirToHtml(directory string){
 
 }
 
-func makePlaylist(file string){
-ClientID := "32d484634e5843ee80024a0d65d1459d"
-ClientSecret := "4629c73660b8499fa4809255e4bba77e"
-auth.SetAuthInfo(clientID, secretKey)
+func makePlaylist(fileName string){
+	fmt.Println("function running")
+	config := &clientcredentials.Config{
+		ClientID : "32d484634e5843ee80024a0d65d1459d",
+		ClientSecret : "4629c73660b8499fa4809255e4bba77e",
+		TokenURL: spotify.TokenURL,
+	}
 
-//request_url := "https://api.spotify.com/v1/search?q="+track_name+"&type=track&market=US&limit=1&offset=5"
-//var track_name string 
 
-//read in the file 
+	token, err := config.Token(context.Background())
+	checkErr(err)
+
+client := spotify.Authenticator{}.NewClient(token)
+
 fileContent, err := ioutil.ReadFile(fileName)
 	checkErr(err)
+text := string(fileContent)
+fmt.Println(text)
+q := strings.SplitN(text,",",5)
+fmt.Println(q)
+
+for _,i  := range q{
+	results, err := client.Search(i, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
+	
+	checkErr(err)
+
+	// handle album results
+	if results.Albums != nil {
+		fmt.Println("Albums:")
+		for _, item := range results.Albums.Albums {
+			fmt.Println(" ", item.Name)
+		}
+	}
+	// handle playlist results
+	if results.Playlists != nil {
+		fmt.Println("Playlists:")
+		for _, item := range results.Playlists.Playlists {
+			fmt.Println(" ", item.Name)
+		}
+	}
+}
 //split the content of the file at ","
+
+
 // for each substring compleate a query to the spotify api
+
+}
+//
 //return json of playlist
 //get  playlist icon,title,link to playlist
 
 
 
-results, err := client.Search(song string , spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
-	checkErr(err)
 
 
 
 
 
-
-}
 
 
 func checkErr(err error){
