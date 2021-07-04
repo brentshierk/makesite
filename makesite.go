@@ -3,14 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	//"fmt"
+	"context"
 	"html/template"
+	//"io/fs"
 	"io/ioutil"
 	"os"
-	"context"
+
 	//"path/filepath"
-	
-	
+	"bufio"
+
 	"strings"
 
 	"github.com/zmb3/spotify"
@@ -26,8 +29,8 @@ func main() {
 	flag.StringVar(&directory,"directory",".","directory to look for text files to convert (all)")
 	flag.Parse()
 
-	
-
+	fmt.Println("hello world")
+	//makePlaylist("test.txt")
 	if directory != ""{
 		dirToHtml(directory)
 	}else if fileName != ""{
@@ -39,6 +42,7 @@ func main() {
 }
 
 func fileToHtml(fileName string){
+	makePlaylist(fileName)
 	fileContent, err := ioutil.ReadFile(fileName)
 	checkErr(err)
 
@@ -65,46 +69,64 @@ func dirToHtml(directory string){
 }
 
 func makePlaylist(fileName string){
-	fmt.Println("function running")
+	//the tmp file will be  used later to create the template,
+	//but first the results of the spotify api query need to be writen to a text file.
+	tmp,err:= os.Create(fileName +"(albums).txt")
+	checkErr(err)
+	println(tmp)
+	tmp2,err:= os.Create(fileName +"(playlist).txt")
+	println(tmp2)
+	checkErr(err)
+
+	//println("file created for "+fileName +"(result).txt")
+	
 	config := &clientcredentials.Config{
 		ClientID : "32d484634e5843ee80024a0d65d1459d",
 		ClientSecret : "4629c73660b8499fa4809255e4bba77e",
 		TokenURL: spotify.TokenURL,
 	}
-
-
 	token, err := config.Token(context.Background())
 	checkErr(err)
+	client := spotify.Authenticator{}.NewClient(token)
 
-client := spotify.Authenticator{}.NewClient(token)
-
-fileContent, err := ioutil.ReadFile(fileName)
-	checkErr(err)
-text := string(fileContent)
-fmt.Println(text)
-q := strings.SplitN(text,",",5)
-fmt.Println(q)
-
-for _,i  := range q{
-	results, err := client.Search(i, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
+	fileContent, err := ioutil.ReadFile(fileName)
+		checkErr(err)
+	text := string(fileContent)
 	
+	q := strings.SplitN(text,",",5)
+	
+	
+	for _,i := range q {
+	results, err := client.Search(i, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
 	checkErr(err)
-
+	var s []string
 	// handle album results
 	if results.Albums != nil {
 		fmt.Println("Albums:")
 		for _, item := range results.Albums.Albums {
-			fmt.Println(" ", item.Name)
+			fmt.Println("   ", item.Name)
+			s = append(s, item.Name)
+			
 		}
+		//var hold []byte
+		//hold = append(hold,s)
+		writer := bufio.NewWriter(tmp)
+		var j int 
+		for j=0;j<10;j++ {
+			_, err := writer.WriteString(s[j] + "\n")
+			checkErr(err)
+			writer.Flush()
 	}
 	// handle playlist results
 	if results.Playlists != nil {
 		fmt.Println("Playlists:")
 		for _, item := range results.Playlists.Playlists {
-			fmt.Println(" ", item.Name)
+			fmt.Println("   ", item.Name)
 		}
 	}
 }
+}
+
 //split the content of the file at ","
 
 
@@ -115,19 +137,9 @@ for _,i  := range q{
 //return json of playlist
 //get  playlist icon,title,link to playlist
 
-
-
-
-
-
-
-
-
-
 func checkErr(err error){
 	if err != nil{
 		println(err)
 	}
 }
-
 
