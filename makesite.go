@@ -67,10 +67,6 @@ func fileToHtml(fileName string){
 	temp1:= template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
 	err = temp1.Execute(j,string(PlaylistContent))
 	checkErr(err)
-
-
-
-
 }
 func dirToHtml(directory string){
 	files,err := ioutil.ReadDir(directory)
@@ -84,13 +80,9 @@ func dirToHtml(directory string){
 	}
 
 }
-
 func makePlaylist(fileName string){
 	//the tmp file will be  used later to create the template,
-	//but first the results of the spotify api query need to be writen to a text file.
-
-	
-
+	//but first the results of the spotify api query need to be writen to a text file.	
 	//println("file created for "+fileName +"(result).txt")
 	
 	config := &clientcredentials.Config{
@@ -124,16 +116,14 @@ func makePlaylist(fileName string){
 			s = append(s, item.Name)
 			
 		}
-		//var hold []byte
-		//hold = append(hold,s)
+
 		writer := bufio.NewWriter(tmp)
 
 		var j int 
 		for j=0;j<10;j++ {
 			_, err := writer.WriteString(s[j] + "\n")
 			checkErr(err)
-			writer.Flush()
-			
+			writer.Flush()		
 	}
 	// handle playlist results
 	if results.Playlists != nil {
@@ -156,15 +146,7 @@ func makePlaylist(fileName string){
 }
 	}
 
-//split the content of the file at ","
-
-
-// for each substring compleate a query to the spotify api
-
 }
-//
-//return json of playlist
-//get  playlist icon,title,link to playlist
 
 func checkErr(err error){
 	if err != nil{
