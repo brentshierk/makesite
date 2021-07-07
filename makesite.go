@@ -29,7 +29,7 @@ func main() {
 	flag.StringVar(&directory,"directory",".","directory to look for text files to convert (all)")
 	flag.Parse()
 
-	fmt.Println("hello world")
+	
 	//makePlaylist("test.txt")
 	if directory != ""{
 		dirToHtml(directory)
@@ -43,7 +43,7 @@ func main() {
 
 func fileToHtml(fileName string){
 	 makePlaylist(fileName)
-	 time.Sleep(5 * time.Second)
+	 time.Sleep(15 * time.Second)
 	fileContent, err := ioutil.ReadFile("(albums)"+fileName )
 	println(fileContent)
 	checkErr(err)
@@ -56,6 +56,21 @@ func fileToHtml(fileName string){
 	checkErr(err)
 
 	f.Close()
+
+	PlaylistContent, err := ioutil.ReadFile("(playlists)"+fileName )
+	println(PlaylistContent)
+	checkErr(err)
+
+	j,err := os.Create(strings.SplitN("(playlists)"+fileName,".",2)[0]+".html")
+	checkErr(err)
+
+	temp1:= template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
+	err = temp1.Execute(j,string(PlaylistContent))
+	checkErr(err)
+
+
+
+
 }
 func dirToHtml(directory string){
 	files,err := ioutil.ReadDir(directory)
@@ -112,16 +127,18 @@ func makePlaylist(fileName string){
 		//var hold []byte
 		//hold = append(hold,s)
 		writer := bufio.NewWriter(tmp)
+
 		var j int 
 		for j=0;j<10;j++ {
 			_, err := writer.WriteString(s[j] + "\n")
 			checkErr(err)
 			writer.Flush()
+			
 	}
 	// handle playlist results
 	if results.Playlists != nil {
 		fmt.Println("Playlists:")
-		tmp2,err:= os.Create("(albums)"+fileName )
+		tmp2,err:= os.Create("(playlists)"+fileName )
 		checkErr(err)
 		for _, item := range results.Playlists.Playlists {
 			fmt.Println("   ", item.Name)
