@@ -10,7 +10,7 @@ import (
 	//"io/fs"
 	"io/ioutil"
 	"os"
-
+	"time"
 	//"path/filepath"
 	"bufio"
 
@@ -34,19 +34,21 @@ func main() {
 	if directory != ""{
 		dirToHtml(directory)
 	}else if fileName != ""{
-		makePlaylist(fileName)
-		fmt.Println("this function ran")
+		fileToHtml(fileName)
+		
 	}
 
 	
 }
 
 func fileToHtml(fileName string){
-	makePlaylist(fileName)
-	fileContent, err := ioutil.ReadFile(fileName)
+	 makePlaylist(fileName)
+	 time.Sleep(5 * time.Second)
+	fileContent, err := ioutil.ReadFile("(albums)"+fileName )
+	println(fileContent)
 	checkErr(err)
 
-	f,err := os.Create(strings.SplitN(fileName,".",2)[0]+".html")
+	f,err := os.Create(strings.SplitN("(albums)"+fileName,".",2)[0]+".html")
 	checkErr(err)
 
 	t:= template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
@@ -71,12 +73,8 @@ func dirToHtml(directory string){
 func makePlaylist(fileName string){
 	//the tmp file will be  used later to create the template,
 	//but first the results of the spotify api query need to be writen to a text file.
-	tmp,err:= os.Create(fileName +"(albums).txt")
-	checkErr(err)
-	println(tmp)
-	tmp2,err:= os.Create(fileName +"(playlist).txt")
-	println(tmp2)
-	checkErr(err)
+
+	
 
 	//println("file created for "+fileName +"(result).txt")
 	
@@ -100,9 +98,12 @@ func makePlaylist(fileName string){
 	results, err := client.Search(i, spotify.SearchTypePlaylist|spotify.SearchTypeAlbum)
 	checkErr(err)
 	var s []string
+	var p []string
 	// handle album results
 	if results.Albums != nil {
 		fmt.Println("Albums:")
+		tmp,err:= os.Create("(albums)"+fileName )
+		checkErr(err)
 		for _, item := range results.Albums.Albums {
 			fmt.Println("   ", item.Name)
 			s = append(s, item.Name)
@@ -120,12 +121,23 @@ func makePlaylist(fileName string){
 	// handle playlist results
 	if results.Playlists != nil {
 		fmt.Println("Playlists:")
+		tmp2,err:= os.Create("(albums)"+fileName )
+		checkErr(err)
 		for _, item := range results.Playlists.Playlists {
 			fmt.Println("   ", item.Name)
+			p = append(p, item.Name)
+			
 		}
+		writer := bufio.NewWriter(tmp2)
+		var j int 
+		for j=0;j<10;j++ {
+			_, err := writer.WriteString(p[j] + "\n")
+			checkErr(err)
+			writer.Flush()
 	}
 }
 }
+	}
 
 //split the content of the file at ","
 
